@@ -2,6 +2,7 @@ import javax.management.*;
 import javax.persistence.*;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.Query;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -99,21 +100,23 @@ public class App_Main {
     private static void editBook(Scanner sc){
         System.out.println("Enter book name: ");
         String bookname = sc.nextLine();
+        Book b = null;
+        b = isUniqueBookname(bookname);
 
         System.out.println("Enter new book name");
         String newbookname = sc.nextLine();
 
-        Book b = null;
-        try{
-            TypedQuery<Book> query = em.createQuery("SELECT b FROM Book b WHERE b.bookname = :bookname", Book.class);
-            query.setParameter("bookname",bookname);
-            b = (Book)query.getSingleResult();
-        }catch (NoResultException ex){
-            System.out.println("Book not found!");
-            return;
-        }catch (NonUniqueResultException ex){
-            System.out.println("Non unique result!");
-        }
+
+//        try{
+//            TypedQuery<Book> query = em.createQuery("SELECT b FROM Book b WHERE b.bookname = :bookname", Book.class);
+//            query.setParameter("bookname",bookname);
+//            b = (Book)query.getSingleResult();
+//        }catch (NoResultException ex){
+//            System.out.println("Book not found!");
+//            return;
+//        }catch (NonUniqueResultException ex){
+//            System.out.println("Non unique result!");
+//        }
 
         em.getTransaction().begin();
         try{
@@ -123,6 +126,34 @@ public class App_Main {
             em.getTransaction().rollback();
         }
         System.out.println("Book with old bookname \""+ bookname + "\" was modified to \""+newbookname+"\"");
+    }
+
+    private static Book isUniqueBookname(String bookname){
+        Book b1 = null;
+        List<Book> b = new ArrayList<>();
+
+        try{
+            TypedQuery<Book> query = em.createQuery("SELECT b FROM Book b WHERE b.bookname = :bookname", Book.class);
+            query.setParameter("bookname",bookname);
+            b = (List<Book>)query.getResultList();
+        }catch (NoResultException ex){
+            System.out.println("Book not found!");
+            return  b1;
+        }
+        int i=1;
+        if ((b.size()) != 1){
+            for (Book bk : b){
+                System.out.println( i++ + " "+bk.toString());
+            }
+            System.out.println("Choose book ->");
+            Scanner sc = new Scanner(System.in);
+            String s = sc.nextLine();
+            int num = Integer.parseInt(s);
+            b1 = b.get(num-1);
+            //bookname = b.get(num-1).getBookname();
+
+        }
+        return  b1;
     }
 
     private static void viewBooks(){
